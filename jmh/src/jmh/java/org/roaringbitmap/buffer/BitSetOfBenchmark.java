@@ -47,26 +47,26 @@ public class BitSetOfBenchmark {
   }
 
   @Benchmark
-  public BitSet[] bitSetOfPreallocated() {
-    return bitSetOfPreallocatedImpl(bitmap);
+  public BitSet[] preallocated() {
+    return bitSetOfPreallocated(bitmap);
   }
 
   @Benchmark
-  public BitSet[] bitSetOfNegativeValuesSeparately() {
-    return bitSetOfNegativeValuesSeparatelyImpl(bitmap);
+  public BitSet[] negativeValuesSeparately() {
+    return bitSetOfNegativeValuesSeparately(bitmap);
   }
 
   @Benchmark
-  public BitSet[] bitSetOfNegativeValuesSeparatelyRegisterPreviousValue() {
-    return bitSetOfNegativeValuesSeparatelyRegisterPreviousValueImpl(bitmap);
+  public BitSet[] negativeValuesSeparatelyRegisterPreviousValue() {
+    return bitSetOfNegativeValuesSeparatelyRegisterPreviousValue(bitmap);
   }
 
   @Benchmark
-  public BitSet[] bitSetOfIterateThroughContainers() {
-    return bitSetOfIterateThroughContainersImpl(bitmap);
+  public BitSet[] iterateThroughContainers() {
+    return bitSetOfIterateThroughContainers(bitmap);
   }
 
-  public static BitSet[] bitSetOfPreallocatedImpl(ImmutableRoaringBitmap bitmap) {
+  public static BitSet[] bitSetOfPreallocated(ImmutableRoaringBitmap bitmap) {
     int last = bitmap.last();
     BitSet bitSetPositive = last > 0 ? new BitSet(last) : new BitSet();
     BitSet bitSetNegative = last < 0 ? new BitSet() : new BitSet(last & 0x7F_FF_FF_FF);
@@ -82,7 +82,7 @@ public class BitSetOfBenchmark {
     return new BitSet[]{bitSetPositive, bitSetNegative};
   }
 
-  public static BitSet[] bitSetOfNegativeValuesSeparatelyImpl(ImmutableRoaringBitmap bitmap) {
+  public static BitSet[] bitSetOfNegativeValuesSeparately(ImmutableRoaringBitmap bitmap) {
     int last = bitmap.last();
     BitSet bitSetPositive = last > 0 ? new BitSet(last) : new BitSet();
     BitSet bitSetNegative = last < 0 ? new BitSet() : new BitSet(last & 0x7F_FF_FF_FF);
@@ -108,7 +108,7 @@ public class BitSetOfBenchmark {
     return new BitSet[]{bitSetPositive, bitSetNegative};
   }
 
-  public static BitSet[] bitSetOfNegativeValuesSeparatelyRegisterPreviousValueImpl(
+  public static BitSet[] bitSetOfNegativeValuesSeparatelyRegisterPreviousValue(
       ImmutableRoaringBitmap bitmap) {
     int last = bitmap.last();
     BitSet bitSetPositive = last > 0 ? new BitSet(last) : new BitSet();
@@ -152,7 +152,7 @@ public class BitSetOfBenchmark {
     return new BitSet[]{bitSetPositive, bitSetNegative};
   }
 
-  public static BitSet[] bitSetOfIterateThroughContainersImpl(ImmutableRoaringBitmap bitmap) {
+  public static BitSet[] bitSetOfIterateThroughContainers(ImmutableRoaringBitmap bitmap) {
     // to avoid BitSet internal array resizing
     int last = bitmap.last();
     BitSet bitSetPositive = last > 0 ? new BitSet(last) : new BitSet();
