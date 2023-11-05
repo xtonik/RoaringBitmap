@@ -68,7 +68,7 @@ public class BitSetOfBenchmark {
   }
 
   @Benchmark
-  public BitSet[] bitSetOfStreamingApi() {
+  public BitSet[] streamingApi() {
     // inspired by #556
     return bitSetOfStreamingApi(bitmap);
   }
