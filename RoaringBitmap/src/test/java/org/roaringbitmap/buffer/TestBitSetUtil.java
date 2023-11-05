@@ -29,7 +29,7 @@ public class TestBitSetUtil {
   }
 
 
-  private void assertEqualBitsets(final BitSet bitset, final ImmutableRoaringBitmap bitmap) {
+  private void assertEqualBitsets(final BitSet bitset, final MutableRoaringBitmap bitmap) {
     assertTrue(BufferBitSetUtil.equals(bitset, bitmap));
   }
 
@@ -241,7 +241,7 @@ public class TestBitSetUtil {
     ImmutableRoaringBitmap original = ImmutableRoaringBitmap.bitmapOf(0, 1, 2, 4);
     BitSet[] bitset = BitSetUtil.bitSetOf(original);
     assertEquals(2, bitset.length);
-    assertEqualBitsets(bitset[0], original);
+    assertEqualBitsets(bitset[0], original.toMutableRoaringBitmap());
     assertTrue(bitset[1].isEmpty());
   }
 
@@ -252,7 +252,7 @@ public class TestBitSetUtil {
     assertEquals(2, bitset.length);
     assertTrue(bitset[0].isEmpty());
     assertEqualBitsets(bitset[1], ImmutableRoaringBitmap.bitmapOf(-1 - Integer.MIN_VALUE,
-        -5 - Integer.MIN_VALUE));
+        -5 - Integer.MIN_VALUE).toMutableRoaringBitmap());
   }
 
   @Test
@@ -260,7 +260,9 @@ public class TestBitSetUtil {
     ImmutableRoaringBitmap bitmap = ImmutableRoaringBitmap.bitmapOf(0, 1, 2, 4, -1);
     BitSet[] bitset = BitSetUtil.bitSetOf(bitmap);
     assertEquals(2, bitset.length);
-    assertEqualBitsets(bitset[0], ImmutableRoaringBitmap.bitmapOf(0, 1, 2, 4));
-    assertEqualBitsets(bitset[1], ImmutableRoaringBitmap.bitmapOf(-1 - Integer.MIN_VALUE));
+    assertEqualBitsets(bitset[0], ImmutableRoaringBitmap.bitmapOf(0, 1, 2, 4)
+        .toMutableRoaringBitmap());
+    assertEqualBitsets(bitset[1], ImmutableRoaringBitmap.bitmapOf(-1 - Integer.MIN_VALUE)
+        .toMutableRoaringBitmap());
   }
 }
