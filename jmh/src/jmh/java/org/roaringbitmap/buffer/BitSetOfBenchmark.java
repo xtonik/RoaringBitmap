@@ -2,6 +2,7 @@ package org.roaringbitmap.buffer;
 
 import org.openjdk.jmh.annotations.*;
 import org.roaringbitmap.BitSetUtil;
+import org.roaringbitmap.IntConsumer;
 import org.roaringbitmap.PeekableCharIterator;
 import org.roaringbitmap.PeekableIntIterator;
 
@@ -64,6 +65,12 @@ public class BitSetOfBenchmark {
   @Benchmark
   public BitSet[] iterateThroughContainers() {
     return bitSetOfIterateThroughContainers(bitmap);
+  }
+
+  @Benchmark
+  public BitSet[] bitSetOfStreamingApi() {
+    // inspired by #556
+    return bitSetOfStreamingApi(bitmap);
   }
 
   public static BitSet[] bitSetOfPreallocated(ImmutableRoaringBitmap bitmap) {
@@ -203,6 +210,19 @@ public class BitSetOfBenchmark {
       }
     }
     return new BitSet[]{bitSetPositive, bitSetNegative};
+  }
+
+  public static BitSet[] bitSetOfStreamingApi(ImmutableRoaringBitmap bitmap) {
+    BitSet positive = new BitSet();
+    BitSet negative = new BitSet();
+    bitmap.forEach((IntConsumer) value -> {
+      if (value > 0) {
+        positive.set(value);
+      } else {
+        negative.set(value & 0x7F_FF_FF_FF);
+      }
+    });
+    return new BitSet[]{positive, negative};
   }
 }
 
