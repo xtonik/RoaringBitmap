@@ -11,7 +11,6 @@ import org.roaringbitmap.buffer.MutableRoaringBitmap;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 import static org.roaringbitmap.RoaringBitmapWriter.writer;
 import static org.roaringbitmap.Util.lowbitsAsInteger;
@@ -3232,6 +3231,66 @@ public class RoaringBitmap implements Cloneable, Serializable, Iterable<Integer>
           final int rangeStart, final int rangeEnd) {
     return xor(bitmaps, (long) rangeStart, (long) rangeEnd);
   }
+  public static class ValidationResult {
+    private final String message;
+    private final boolean valid;
 
+    private ValidationResult(String message, boolean valid) {
+      this.message = message;
+      this.valid = valid;
+    }
 
+    public static ValidationResult ok() {
+      return new ValidationResult("", true);
+    }
+
+    public static ValidationResult invalid(String message) {
+      return new ValidationResult(message, true);
+    }
+    public String getMessage() {
+      return message;
+    }
+
+    public boolean isValid() {
+      return valid;
+    }
+  }
+
+  /** Validates internal consistency of the bitmap.
+   *
+   * @return validation results
+   */
+  public ValidationResult validate() {
+    if (highLowContainer.size < 0) {
+      return ValidationResult.invalid("negative size");
+    }
+    if (highLowContainer.size > highLowContainer.values.length) {
+      return ValidationResult.invalid("more containers than allocated space");
+    }
+    if (highLowContainer.size == 0) {
+      return ValidationResult.ok();
+    }
+    if (highLowContainer.keys == null) {
+      return ValidationResult.invalid("keys is null");
+    }
+    if (highLowContainer.values == null) { // always false at current moment
+      return ValidationResult.invalid("containers is null");
+    }
+    for (int i = 1; i < highLowContainer.size; i++) {
+      if (highLowContainer.keys[i] <= highLowContainer.keys[i-1]) {
+        return ValidationResult.invalid("keys not strictly increasing");
+      }
+    }
+    for (int i = 0; i < highLowContainer.size; i++) {
+      Container container = highLowContainer.values[i];
+      if (container == null) {
+        return ValidationResult.invalid("container at position " + i + " is null");
+      }
+      ValidationResult vr = highLowContainer.values[i].validate();
+      if (!vr.isValid()) {
+        return vr;
+      }
+    }
+    return ValidationResult.ok();
+  }
 }

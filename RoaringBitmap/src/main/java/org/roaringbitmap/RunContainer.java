@@ -3,6 +3,7 @@
  */
 package org.roaringbitmap;
 
+import org.roaringbitmap.RoaringBitmap.ValidationResult;
 import org.roaringbitmap.buffer.MappeableContainer;
 import org.roaringbitmap.buffer.MappeableRunContainer;
 
@@ -2735,6 +2736,45 @@ public final class RunContainer extends Container implements Cloneable {
     return start + length;
   }
 
+  @Override
+  public ValidationResult validate() {
+    if (nbrruns < 0) {
+      return ValidationResult.invalid("negative run count");
+    }
+    if (valueslength == null) {
+      return ValidationResult.invalid("valuesLength is null");
+    }
+    if (valueslength.length < nbrruns) {
+      return ValidationResult.invalid("capacity less than run count");
+    }
+    if (nbrruns == 0) {
+      return ValidationResult.ok(); // TODO is this possible and if so is it correct?
+    }
+    int lastEnd = -1;
+    for (int i = 0; i < nbrruns; i++) {
+      int start = getValue(i);
+      int end = start + getLength(i);
+      if (end <= start) {
+        return ValidationResult.invalid("run start + length overflow for run no. " + i + ": "
+            + start + "-" + end);
+      }
+      if (end > 1 << 16) {
+        return ValidationResult.invalid("run start + length too large for run no. " + i + ": "
+            + start + "-" + end);
+      }
+      if (start < lastEnd) {
+        return ValidationResult.invalid("start less than last end for run no. " + i + ": "
+            + start
+            + "<" + lastEnd);
+      }
+      if (start == lastEnd) {
+        return ValidationResult.invalid("start equal to last end, should have combined for run no. "
+            + i + ": " + start);
+      }
+      lastEnd = end;
+    }
+    return ValidationResult.ok();
+  }
 }
 
 

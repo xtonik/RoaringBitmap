@@ -11,7 +11,7 @@ public class RangeOperationBenchmark {
 
   @Benchmark
   public int computeCardinality(BenchmarkState state) {
-    state.bc.computeCardinality();
+    state.bc.recomputeCardinality();
     return state.bc.getCardinality();
   }
 

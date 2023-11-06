@@ -4,6 +4,7 @@
 
 package org.roaringbitmap;
 
+import org.roaringbitmap.RoaringBitmap.ValidationResult;
 import org.roaringbitmap.buffer.MappeableBitmapContainer;
 import org.roaringbitmap.buffer.MappeableContainer;
 
@@ -294,11 +295,16 @@ public final class BitmapContainer extends Container implements Cloneable {
   /**
    * Recomputes the cardinality of the bitmap.
    */
-  void computeCardinality() {
-    this.cardinality = 0;
+  void recomputeCardinality() {
+    this.cardinality = computeCardinality();
+  }
+
+  private int computeCardinality() {
+    int cardinality = 0;
     for (int k = 0; k < this.bitmap.length; k++) {
       this.cardinality += Long.bitCount(this.bitmap[k]);
     }
+    return cardinality;
   }
 
   int cardinalityInRange(int start, int end) {
@@ -782,7 +788,7 @@ public final class BitmapContainer extends Container implements Cloneable {
     for (int k = 0; k < this.bitmap.length & k < b2.bitmap.length; k++) {
       this.bitmap[k] |= b2.bitmap[k];
     }
-    computeCardinality();
+    recomputeCardinality();
     if (isFull()) {
       return RunContainer.full();
     }
@@ -872,7 +878,7 @@ public final class BitmapContainer extends Container implements Cloneable {
       this.bitmap[k] ^= b2.bitmap[k];
     }
     // now count the bits
-    computeCardinality();
+    recomputeCardinality();
     if (cardinality > ArrayContainer.DEFAULT_MAX_SIZE) {
       return this;
     }
@@ -1227,7 +1233,7 @@ public final class BitmapContainer extends Container implements Cloneable {
   @Override
   public Container repairAfterLazy() {
     if (getCardinality() < 0) {
-      computeCardinality();
+      recomputeCardinality();
       if(getCardinality() <= ArrayContainer.DEFAULT_MAX_SIZE) {
         return this.toArrayContainer();
       } else if (isFull()) {
@@ -1698,7 +1704,21 @@ public final class BitmapContainer extends Container implements Cloneable {
     // sizeof(long) * #words from start - number of bits after the last bit set
     return (i + 1) * 64 - Long.numberOfLeadingZeros(bitmap[i]) - 1;
   }
-
+  @Override
+  public ValidationResult validate() {
+    if (bitmap == null) {
+      return ValidationResult.invalid("bitmap is null");
+    }
+    if (bitmap.length != MAX_CAPACITY / 64) {
+      return ValidationResult.invalid("invalid bitmap length: " + bitmap.length);
+    }
+    int realCardinality = computeCardinality();
+    if (cardinality != realCardinality) {
+      return ValidationResult.invalid("cardinality is " + cardinality + " instead of correct "
+          + realCardinality);
+    }
+    return ValidationResult.ok();
+  }
 }
 
 

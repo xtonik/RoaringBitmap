@@ -4,6 +4,7 @@
 
 package org.roaringbitmap;
 
+import org.roaringbitmap.RoaringBitmap.ValidationResult;
 import org.roaringbitmap.buffer.MappeableArrayContainer;
 import org.roaringbitmap.buffer.MappeableContainer;
 
@@ -1506,6 +1507,27 @@ public final class ArrayContainer extends Container implements Cloneable {
 
   }
 
+  @Override
+  public ValidationResult validate() {
+    if (cardinality < 0) {
+      return ValidationResult.invalid("negative cardinality");
+    }
+    if (cardinality > DEFAULT_MAX_SIZE) {
+      return ValidationResult.invalid("cardinality exceeds DEFAULT_MAX_SIZE");
+    }
+    if (content == null) {
+      return ValidationResult.invalid("content is null");
+    }
+    if (content.length < cardinality) {
+      return ValidationResult.invalid("cardinality exceeds capacity");
+    }
+    for (int i = 1; i < cardinality; i++) {
+      if (content[i] <= content[i - 1]) {
+        return ValidationResult.invalid("array elements not strictly increasing");
+      }
+    }
+    return ValidationResult.ok();
+  }
 }
 
 

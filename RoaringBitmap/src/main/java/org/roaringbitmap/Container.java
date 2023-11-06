@@ -4,6 +4,7 @@
 
 package org.roaringbitmap;
 
+import org.roaringbitmap.RoaringBitmap.ValidationResult;
 import org.roaringbitmap.buffer.MappeableContainer;
 
 import java.io.DataInput;
@@ -1037,6 +1038,25 @@ public abstract class Container implements Iterable<Character>, Cloneable, Exter
   protected void assertNonEmpty(boolean condition) {
     if(condition) {
       throw new NoSuchElementException("Empty " + getContainerName());
+    }
+  }
+
+  /** Validates internal consistency of the container.
+   *
+   * @return validation results
+   */
+  public ValidationResult validate() {
+    if (this instanceof ArrayContainer) {
+      ArrayContainer ac = (ArrayContainer) this;
+      return ac.validate();
+    } else if (this instanceof BitmapContainer) {
+      BitmapContainer bc = (BitmapContainer) this;
+      return bc.validate();
+    } else if (this instanceof RunContainer) {
+      RunContainer rc = (RunContainer) this;
+      return rc.validate();
+    } else {
+      return ValidationResult.invalid("unknown container type: " + this.getClass());
     }
   }
 }
