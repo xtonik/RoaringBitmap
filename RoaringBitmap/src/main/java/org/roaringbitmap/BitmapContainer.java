@@ -302,7 +302,7 @@ public final class BitmapContainer extends Container implements Cloneable {
   private int computeCardinality() {
     int cardinality = 0;
     for (int k = 0; k < this.bitmap.length; k++) {
-      this.cardinality += Long.bitCount(this.bitmap[k]);
+      cardinality += Long.bitCount(this.bitmap[k]);
     }
     return cardinality;
   }
