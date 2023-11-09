@@ -3,6 +3,7 @@
  */
 package org.roaringbitmap;
 
+import org.roaringbitmap.RoaringBitmap.ValidationCode;
 import org.roaringbitmap.RoaringBitmap.ValidationResult;
 import org.roaringbitmap.buffer.MappeableContainer;
 import org.roaringbitmap.buffer.MappeableRunContainer;
@@ -2726,13 +2727,14 @@ public final class RunContainer extends Container implements Cloneable {
   @Override
   public ValidationResult validate() {
     if (nbrruns < 0) {
-      return ValidationResult.invalid("negative run count");
+      return ValidationResult.invalid(ValidationCode.NEGATIVE_RUN_COUNT, nbrruns);
     }
     if (valueslength == null) {
-      return ValidationResult.invalid("valuesLength is null");
+      return ValidationResult.invalid(ValidationCode.NULL_VALUES_LENGTH);
     }
     if (valueslength.length < nbrruns) {
-      return ValidationResult.invalid("capacity less than run count");
+      return ValidationResult.invalid(ValidationCode.CAPACITY_LESS_THAN_RUN_COUNT,
+          valueslength.length, nbrruns);
     }
     if (nbrruns == 0) {
       return ValidationResult.ok(); // TODO is this possible and if so is it correct?
@@ -2741,22 +2743,17 @@ public final class RunContainer extends Container implements Cloneable {
     for (int i = 0; i < nbrruns; i++) {
       int start = getValue(i);
       int end = start + getLength(i);
-      if (end <= start) {
-        return ValidationResult.invalid("run start + length overflow for run no. " + i + ": "
-            + start + "-" + end);
+      if (end < start) {
+        return ValidationResult.invalid(ValidationCode.BAD_RANGE, i, start, end);
       }
       if (end > 1 << 16) {
-        return ValidationResult.invalid("run start + length too large for run no. " + i + ": "
-            + start + "-" + end);
+        return ValidationResult.invalid(ValidationCode.RUN_OVERFLOW, i, start, end);
       }
       if (start < lastEnd) {
-        return ValidationResult.invalid("start less than last end for run no. " + i + ": "
-            + start
-            + "<" + lastEnd);
+        return ValidationResult.invalid(ValidationCode.RUN_OVERLAP, i, start, lastEnd);
       }
       if (start == lastEnd) {
-        return ValidationResult.invalid("start equal to last end, should have combined for run no. "
-            + i + ": " + start);
+        return ValidationResult.invalid(ValidationCode.RUNS_NOT_MERGED, i, start);
       }
       lastEnd = end;
     }

@@ -3233,28 +3233,132 @@ public class RoaringBitmap implements Cloneable, Serializable, Iterable<Integer>
           final int rangeStart, final int rangeEnd) {
     return xor(bitmaps, (long) rangeStart, (long) rangeEnd);
   }
-  public static class ValidationResult {
-    private final String message;
-    private final boolean valid;
 
-    private ValidationResult(String message, boolean valid) {
-      this.message = message;
-      this.valid = valid;
+  public enum ValidationCode {
+    // TODO better naming & message
+    OK("valid"),
+    NEGATIVE_SIZE("negative size",
+    "container count"),
+    MORE_CONTAINERS_THAN_SPACE("more containers than allocated space",
+    "containers count", "allocated space"),
+    NULL_KEYS("keys is null"),
+    NULL_CONTAINERS("containers is null"),
+    NON_INCREASING_KEYS("keys not strictly increasing",
+        "number of container", "preceding key", "following key"),
+    NULL_CONTAINER("container is null",
+        "number of container"),
+    NEGATIVE_CARDINALITY("negative cardinality",
+        "cardinality"),
+    TOO_BIG_CARDINALITY("cardinality exceeds DEFAULT_MAX_SIZE",
+      "cardinality"),
+    NULL_CONTENT("content is null"),
+    CARDINALITY_EXCEEDS_CAPACITY("cardinality exceeds capacity",
+      "capacity", "cardinality"),
+    NON_INCREASING_VALUES("array elements not strictly increasing",
+        "number of run", "preceding value", "following value"),
+    NULL_BITMAP("bitmap is null"),
+    INVALID_BITMAP_LENGTH("invalid bitmap length",
+        "bitmap length"),
+    INVALID_CARDINALITY("given cardinality differs from its real counterpart",
+        "cardinality", "realCardinality"),
+    UNKNOWN_CONTAINER_TYPE("unknown container type",
+    "container class"),
+    NEGATIVE_RUN_COUNT("negative run count",
+        "run count"),
+    NULL_VALUES_LENGTH("valuesLength is null"),
+    CAPACITY_LESS_THAN_RUN_COUNT("capacity less than run count",
+        "capacity", "run count"),
+    RUN_OVERFLOW("run start + length overflow",
+      "number of run", "range start", "range end"),
+    BAD_RANGE("run start after its end",
+        "number of run", "range start", "range end"),
+    RUN_OVERLAP("overlapping runs",
+        "number of run", "previous run range end", "current run range start"),
+    RUNS_NOT_MERGED("start equal to last end, should have combined for run",
+        "number of run", "last value in first run"),
+    NULL_CONTAINER_VALUES("container array is null")
+
+    ;
+
+    private final String[] params;
+
+    public String getParam() {
+      return message;
     }
 
-    public static ValidationResult ok() {
-      return new ValidationResult("", true);
-    }
-
-    public static ValidationResult invalid(String message) {
-      return new ValidationResult(message, true);
-    }
     public String getMessage() {
       return message;
     }
 
+    private final String message;
+
+    ValidationCode(String message, String... params) {
+
+      this.message = message;
+      this.params = params;
+    }
+
+    public int getParamsCount() {
+      return params.length;
+    }
+  }
+  public static class ValidationResult {
+
+    private final ValidationCode code;
+    private final Object[] params;
+
+    private ValidationResult(ValidationCode code, Object... params) {
+      this.code = code;
+      this.params = params;
+    }
+
+    public static ValidationResult ok() {
+      return new ValidationResult(ValidationCode.OK);
+    }
+
+    /** Creates invalid validation results.
+     *
+     * @param code reason code
+     * @return violated validation
+     */
+    public static ValidationResult invalid(ValidationCode code) {
+      return new ValidationResult(code);
+    }
+
+    /** Creates invalid validation results.
+     *
+     * @param code reason code
+     * @param params violation details parameters, their count expected to correspond to code,
+     *               otherwise IllegalArgumentException is thrown
+     * @return violated validation
+     */
+    public static ValidationResult invalid(ValidationCode code, Object... params) {
+      if (params.length != code.getParamsCount()) {
+        throw new IllegalArgumentException("expected " + code.getParamsCount() + ", but given "
+            + params.length);
+      }
+      return new ValidationResult(code, params);
+    }
+
     public boolean isValid() {
-      return valid;
+      return code == ValidationCode.OK;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      sb.append("ValidationResult{")
+          .append("code=").append(code)
+          .append(", ");
+      for (int i = 0; i < params.length; i++) {
+        sb.append(params[i]).append('=').append(params[i]).append(", ");
+      }
+      sb.append('}');
+      return sb.toString();
+    }
+
+    public ValidationCode getCode() {
+      return code;
     }
   }
 
@@ -3263,30 +3367,35 @@ public class RoaringBitmap implements Cloneable, Serializable, Iterable<Integer>
    * @return validation results
    */
   public ValidationResult validate() {
+    if (highLowContainer == null) {
+      return ValidationResult.invalid(ValidationCode.NULL_CONTAINERS);
+    }
     if (highLowContainer.size < 0) {
-      return ValidationResult.invalid("negative size");
+      return ValidationResult.invalid(ValidationCode.NEGATIVE_SIZE, highLowContainer.size);
+    }
+    if (highLowContainer.values == null) {
+      return ValidationResult.invalid(ValidationCode.NULL_CONTAINER_VALUES);
     }
     if (highLowContainer.size > highLowContainer.values.length) {
-      return ValidationResult.invalid("more containers than allocated space");
+      return ValidationResult.invalid(ValidationCode.MORE_CONTAINERS_THAN_SPACE,
+          highLowContainer.size, highLowContainer.values.length);
     }
     if (highLowContainer.size == 0) {
       return ValidationResult.ok();
     }
     if (highLowContainer.keys == null) {
-      return ValidationResult.invalid("keys is null");
-    }
-    if (highLowContainer.values == null) { // always false at current moment
-      return ValidationResult.invalid("containers is null");
+      return ValidationResult.invalid(ValidationCode.NULL_KEYS);
     }
     for (int i = 1; i < highLowContainer.size; i++) {
-      if (highLowContainer.keys[i] <= highLowContainer.keys[i-1]) {
-        return ValidationResult.invalid("keys not strictly increasing");
+      if (highLowContainer.keys[i] <= highLowContainer.keys[i - 1]) {
+        return ValidationResult.invalid(ValidationCode.NON_INCREASING_KEYS, i,
+            highLowContainer.keys[i - 1], highLowContainer.keys[i]);
       }
     }
     for (int i = 0; i < highLowContainer.size; i++) {
       Container container = highLowContainer.values[i];
       if (container == null) {
-        return ValidationResult.invalid("container at position " + i + " is null");
+        return ValidationResult.invalid(ValidationCode.NULL_CONTAINER, i);
       }
       ValidationResult vr = highLowContainer.values[i].validate();
       if (!vr.isValid()) {

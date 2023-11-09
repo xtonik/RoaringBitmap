@@ -4,6 +4,7 @@
 
 package org.roaringbitmap;
 
+import org.roaringbitmap.RoaringBitmap.ValidationCode;
 import org.roaringbitmap.RoaringBitmap.ValidationResult;
 import org.roaringbitmap.buffer.MappeableContainer;
 
@@ -1056,7 +1057,7 @@ public abstract class Container implements Iterable<Character>, Cloneable, Exter
       RunContainer rc = (RunContainer) this;
       return rc.validate();
     } else {
-      return ValidationResult.invalid("unknown container type: " + this.getClass());
+      return ValidationResult.invalid(ValidationCode.UNKNOWN_CONTAINER_TYPE, this.getClass());
     }
   }
 }

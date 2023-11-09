@@ -4,6 +4,7 @@
 
 package org.roaringbitmap;
 
+import org.roaringbitmap.RoaringBitmap.ValidationCode;
 import org.roaringbitmap.RoaringBitmap.ValidationResult;
 import org.roaringbitmap.buffer.MappeableBitmapContainer;
 import org.roaringbitmap.buffer.MappeableContainer;
@@ -1227,7 +1228,7 @@ public final class BitmapContainer extends Container implements Cloneable {
   @Override
   public Container repairAfterLazy() {
     if (getCardinality() < 0) {
-      recomputeCardinality();
+      computeCardinality();
       if(getCardinality() <= ArrayContainer.DEFAULT_MAX_SIZE) {
         return this.toArrayContainer();
       } else if (isFull()) {
@@ -1701,15 +1702,15 @@ public final class BitmapContainer extends Container implements Cloneable {
   @Override
   public ValidationResult validate() {
     if (bitmap == null) {
-      return ValidationResult.invalid("bitmap is null");
+      return ValidationResult.invalid(ValidationCode.NULL_BITMAP);
     }
     if (bitmap.length != MAX_CAPACITY / 64) {
-      return ValidationResult.invalid("invalid bitmap length: " + bitmap.length);
+      return ValidationResult.invalid(ValidationCode.INVALID_BITMAP_LENGTH, bitmap.length);
     }
     int realCardinality = computeCardinality();
     if (cardinality != realCardinality) {
-      return ValidationResult.invalid("cardinality is " + cardinality + " instead of correct "
-          + realCardinality);
+      return ValidationResult.invalid(ValidationCode.INVALID_CARDINALITY, cardinality,
+          realCardinality);
     }
     return ValidationResult.ok();
   }
