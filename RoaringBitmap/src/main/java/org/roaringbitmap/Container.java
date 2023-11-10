@@ -1085,8 +1085,6 @@ public abstract class Container implements Iterable<Character>, Cloneable, Exter
         "capacity", "run count"),
     RUN_OVERFLOW("run start + length overflow",
         "number of run", "range start", "range end"),
-    BAD_RANGE("run start after its end",
-        "number of run", "range start", "range end"),
     RUN_OVERLAP("overlapping runs",
         "number of run", "previous run range end", "current run range start"),
     RUNS_NOT_MERGED("start equal to last end, should have combined for run",

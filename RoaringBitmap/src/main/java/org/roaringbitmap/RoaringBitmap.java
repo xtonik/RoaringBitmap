@@ -3236,7 +3236,11 @@ public class RoaringBitmap implements Cloneable, Serializable, Iterable<Integer>
 
   public enum ValidationCode {
     // TODO better naming & message
+    // first two values have special meaning
     OK("valid"),
+    INVALID_CONTAINER("container is not valid",
+        "number of container", "violation"),
+
     NEGATIVE_SIZE("negative size",
     "container count"),
     MORE_CONTAINERS_THAN_SPACE("more containers than allocated space",
@@ -3249,8 +3253,7 @@ public class RoaringBitmap implements Cloneable, Serializable, Iterable<Integer>
         "number of container"),
     NULL_CONTAINER_VALUES("container array is null"),
 
-    INVALID_CONTAINER("container is not valid",
-        "number of container", "violation");
+    ;
 
     private final String[] params;
 

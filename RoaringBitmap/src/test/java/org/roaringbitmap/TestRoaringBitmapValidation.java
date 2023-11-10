@@ -5,7 +5,6 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.roaringbitmap.RoaringBitmap.ValidationCode;
 
 import java.lang.reflect.Field;
 import java.util.stream.Stream;
@@ -25,50 +24,50 @@ public class TestRoaringBitmapValidation {
     RoaringBitmap bitmap = testCase.getBitmap();
     ValidationResult vr = bitmap.validate();
     assertEquals(testCase.getCode(), vr.getCode());
-    // TODO more asserts
+    assertEquals(testCase.getSubCode(), vr.getSubCode());
+    // TODO more asserts on param values
   }
 
+  private static final ValidationTestCase[] testedSet
+      = ValidationTestCase.values(); // all
+      // = new ValidationTestCase[]{ValidationTestCase.RUN_OVERFLOW}; // for debugging purposes
   private static Stream<Arguments> testCases() {
-    // selected test cases:
-    // ValidationTestCase[] tested = new ValidationTestCase[]{ValidationTestCase.RUN_OVERFLOW};
-    // all test cases:
-    ValidationTestCase[] tested = ValidationTestCase.values();
-    return Stream.of(tested).map(Arguments::of);
+    return Stream.of(testedSet).map(Arguments::of);
   }
 
   public enum ValidationTestCase {
-    EMPTY(ValidationCode.OK),
-    NULL_CONTAINERS(ValidationCode.NULL_CONTAINERS),
-    NEGATIVE_SIZE(ValidationCode.NEGATIVE_SIZE),
-    CAPACITY_LESS_THAN_RUN_COUNT(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.CAPACITY_LESS_THAN_RUN_COUNT),
-    MORE_CONTAINERS_THAN_SPACE(ValidationCode.MORE_CONTAINERS_THAN_SPACE),
-    NON_INCREASING_KEYS(ValidationCode.NON_INCREASING_KEYS),
-    NULL_KEYS(ValidationCode.NULL_KEYS),
-    NULL_CONTAINER(ValidationCode.NULL_CONTAINER),
-    UNKNOWN_CONTAINER_TYPE(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.UNKNOWN_CONTAINER_TYPE),
-    NEGATIVE_CARDINALITY(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.NEGATIVE_CARDINALITY),
-    NULL_CONTENT(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.NULL_CONTENT),
-    CARDINALITY_EXCEEDS_CAPACITY(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.CARDINALITY_EXCEEDS_CAPACITY),
-    NON_INCREASING_VALUES(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.NON_INCREASING_VALUES),
-    NULL_BITMAP(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.NULL_BITMAP),
-    INVALID_BITMAP_LENGTH(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.INVALID_BITMAP_LENGTH),
-    INVALID_CARDINALITY(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.INVALID_CARDINALITY),
-    NEGATIVE_RUN_COUNT(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.NEGATIVE_RUN_COUNT),
-    NULL_VALUES_LENGTH(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.NULL_VALUES_LENGTH),
-    RUN_OVERLAP(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.RUN_OVERLAP),
-    BAD_RANGE(ValidationCode.OK), // TODO ValidationCode.BAD_RANGE
-    RUN_OVERFLOW(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.RUN_OVERFLOW),
-    NULL_CONTAINER_VALUES(ValidationCode.NULL_CONTAINER_VALUES),
-    RUNS_NOT_MERGED(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.RUNS_NOT_MERGED),
-    TOO_BIG_CARDINALITY(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.TOO_BIG_CARDINALITY)
+    EMPTY(RoaringBitmap.ValidationCode.OK),
+    NULL_CONTAINERS(RoaringBitmap.ValidationCode.NULL_CONTAINERS),
+    NEGATIVE_SIZE(RoaringBitmap.ValidationCode.NEGATIVE_SIZE),
+    MORE_CONTAINERS_THAN_SPACE(RoaringBitmap.ValidationCode.MORE_CONTAINERS_THAN_SPACE),
+    NON_INCREASING_KEYS(RoaringBitmap.ValidationCode.NON_INCREASING_KEYS),
+    NULL_KEYS(RoaringBitmap.ValidationCode.NULL_KEYS),
+    NULL_CONTAINER(RoaringBitmap.ValidationCode.NULL_CONTAINER),
+    NULL_CONTAINER_VALUES(RoaringBitmap.ValidationCode.NULL_CONTAINER_VALUES),
 
-    // TODO missing - some violations should be multiple - thrown not by one container type only
+    CAPACITY_LESS_THAN_RUN_COUNT(Container.ValidationCode.CAPACITY_LESS_THAN_RUN_COUNT),
+    UNKNOWN_CONTAINER_TYPE(Container.ValidationCode.UNKNOWN_CONTAINER_TYPE),
+    NEGATIVE_CARDINALITY(Container.ValidationCode.NEGATIVE_CARDINALITY),
+    NULL_CONTENT(Container.ValidationCode.NULL_CONTENT),
+    CARDINALITY_EXCEEDS_CAPACITY(Container.ValidationCode.CARDINALITY_EXCEEDS_CAPACITY),
+    NON_INCREASING_VALUES(Container.ValidationCode.NON_INCREASING_VALUES),
+    NULL_BITMAP(Container.ValidationCode.NULL_BITMAP),
+    INVALID_BITMAP_LENGTH(Container.ValidationCode.INVALID_BITMAP_LENGTH),
+    INVALID_CARDINALITY(Container.ValidationCode.INVALID_CARDINALITY),
+    NEGATIVE_RUN_COUNT(Container.ValidationCode.NEGATIVE_RUN_COUNT),
+    NULL_VALUES_LENGTH(Container.ValidationCode.NULL_VALUES_LENGTH),
+    RUN_OVERLAP(Container.ValidationCode.RUN_OVERLAP),
+    RUN_OVERFLOW(Container.ValidationCode.RUN_OVERFLOW),
+    RUNS_NOT_MERGED(Container.ValidationCode.RUNS_NOT_MERGED),
+    TOO_BIG_CARDINALITY(Container.ValidationCode.TOO_BIG_CARDINALITY)
+
+    // TODO missing - the same violations thrown by other container types
     ;
 
     public static final int SOME_RUN_START = 1;
     public static final int SOME_RUN_END = 10_000;
     @SuppressWarnings("SpellCheckingInspection")
-    public static final String VALUES_LENGTH_FIELDNAME = "valueslength";
+    public static final String VALUES_LENGTH_FIELD_NAME = "valueslength";
 
     public RoaringBitmap getBitmap() {
       return bitmapOf(this);
@@ -154,7 +153,7 @@ public class TestRoaringBitmapValidation {
           break;
         case NULL_VALUES_LENGTH:
           rc = putSomeRun(rb);
-          setPrivateValue(VALUES_LENGTH_FIELDNAME, null, rc);
+          setPrivateValue(VALUES_LENGTH_FIELD_NAME, null, rc);
           break;
         case CAPACITY_LESS_THAN_RUN_COUNT:
           rc = putSomeRun(rb);
@@ -165,27 +164,20 @@ public class TestRoaringBitmapValidation {
           char[] valuesLength = new char[2];
           valuesLength[0] = 1 << 16 - 2;
           valuesLength[1] = (char) ((1 << 16) - 1); // ~ 1 << 16 - 1 + 2 = 1 << 16 + 1 > 1 << 16
-          setPrivateValue(VALUES_LENGTH_FIELDNAME, valuesLength, rc);
-          break;
-        case BAD_RANGE:
-          rc = putSomeRun(rb);
-          valuesLength = new char[2];
-          valuesLength[1] = (char) -1;
-          setPrivateValue(VALUES_LENGTH_FIELDNAME, valuesLength, rc);
-          // FIXME impossible as char cannot be negative
+          setPrivateValue(VALUES_LENGTH_FIELD_NAME, valuesLength, rc);
           break;
         case RUN_OVERLAP:
           putSomeRun(rb);
           rc = putRun(rb, SOME_RUN_END + 2, SOME_RUN_END + 3);
           valuesLength = new char[]{SOME_RUN_START, SOME_RUN_END, SOME_RUN_END - 2,
               SOME_RUN_END + 3};
-          setPrivateValue(VALUES_LENGTH_FIELDNAME, valuesLength, rc);
+          setPrivateValue(VALUES_LENGTH_FIELD_NAME, valuesLength, rc);
           break;
         case RUNS_NOT_MERGED:
           putSomeRun(rb);
           rc = putRun(rb, SOME_RUN_END + 2, SOME_RUN_END + 3);
           valuesLength = new char[]{SOME_RUN_START, SOME_RUN_END, SOME_RUN_END + 1, SOME_RUN_END + 3};
-          setPrivateValue(VALUES_LENGTH_FIELDNAME, valuesLength, rc);
+          setPrivateValue(VALUES_LENGTH_FIELD_NAME, valuesLength, rc);
           break;
         case NULL_CONTAINER_VALUES:
           rb.highLowContainer.values = null;
@@ -228,7 +220,7 @@ public class TestRoaringBitmapValidation {
       }
     }
 
-    public ValidationCode getCode() {
+    public RoaringBitmap.ValidationCode getCode() {
       return code;
     }
 
@@ -236,17 +228,17 @@ public class TestRoaringBitmapValidation {
       return subCode;
     }
 
-    ValidationTestCase(ValidationCode code) {
+    ValidationTestCase(RoaringBitmap.ValidationCode code) {
       this.code = code;
       this.subCode = Container.ValidationCode.BITMAP_VIOLATION;
     }
 
-    ValidationTestCase(ValidationCode code, Container.ValidationCode subCode) {
-      this.code = code;
+    ValidationTestCase(Container.ValidationCode subCode) {
+      this.code = RoaringBitmap.ValidationCode.INVALID_CONTAINER;
       this.subCode = subCode;
     }
 
-    private final ValidationCode code;
+    private final RoaringBitmap.ValidationCode code;
 
     private final Container.ValidationCode subCode;
   }

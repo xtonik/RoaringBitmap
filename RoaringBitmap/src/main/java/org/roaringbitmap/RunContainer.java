@@ -2741,9 +2741,6 @@ public final class RunContainer extends Container implements Cloneable {
     for (int i = 0; i < nbrruns; i++) {
       int start = getValue(i);
       int end = start + getLength(i);
-      if (end < start) {
-        return ValidationResult.invalid(ValidationCode.BAD_RANGE, i, start, end);
-      }
       if (end > 1 << 16) {
         return ValidationResult.invalid(ValidationCode.RUN_OVERFLOW, i, start, end);
       }
