@@ -6,7 +6,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.roaringbitmap.RoaringBitmap.ValidationCode;
-import org.roaringbitmap.RoaringBitmap.ValidationResult;
 
 import java.lang.reflect.Field;
 import java.util.stream.Stream;
@@ -41,27 +40,27 @@ public class TestRoaringBitmapValidation {
     EMPTY(ValidationCode.OK),
     NULL_CONTAINERS(ValidationCode.NULL_CONTAINERS),
     NEGATIVE_SIZE(ValidationCode.NEGATIVE_SIZE),
-    CAPACITY_LESS_THAN_RUN_COUNT(ValidationCode.CAPACITY_LESS_THAN_RUN_COUNT),
+    CAPACITY_LESS_THAN_RUN_COUNT(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.CAPACITY_LESS_THAN_RUN_COUNT),
     MORE_CONTAINERS_THAN_SPACE(ValidationCode.MORE_CONTAINERS_THAN_SPACE),
     NON_INCREASING_KEYS(ValidationCode.NON_INCREASING_KEYS),
     NULL_KEYS(ValidationCode.NULL_KEYS),
     NULL_CONTAINER(ValidationCode.NULL_CONTAINER),
-    UNKNOWN_CONTAINER_TYPE(ValidationCode.UNKNOWN_CONTAINER_TYPE),
-    NEGATIVE_CARDINALITY(ValidationCode.NEGATIVE_CARDINALITY),
-    NULL_CONTENT(ValidationCode.NULL_CONTENT),
-    CARDINALITY_EXCEEDS_CAPACITY(ValidationCode.CARDINALITY_EXCEEDS_CAPACITY),
-    NON_INCREASING_VALUES(ValidationCode.NON_INCREASING_VALUES),
-    NULL_BITMAP(ValidationCode.NULL_BITMAP),
-    INVALID_BITMAP_LENGTH(ValidationCode.INVALID_BITMAP_LENGTH),
-    INVALID_CARDINALITY(ValidationCode.INVALID_CARDINALITY),
-    NEGATIVE_RUN_COUNT(ValidationCode.NEGATIVE_RUN_COUNT),
-    NULL_VALUES_LENGTH(ValidationCode.NULL_VALUES_LENGTH),
-    RUN_OVERLAP(ValidationCode.RUN_OVERLAP),
+    UNKNOWN_CONTAINER_TYPE(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.UNKNOWN_CONTAINER_TYPE),
+    NEGATIVE_CARDINALITY(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.NEGATIVE_CARDINALITY),
+    NULL_CONTENT(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.NULL_CONTENT),
+    CARDINALITY_EXCEEDS_CAPACITY(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.CARDINALITY_EXCEEDS_CAPACITY),
+    NON_INCREASING_VALUES(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.NON_INCREASING_VALUES),
+    NULL_BITMAP(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.NULL_BITMAP),
+    INVALID_BITMAP_LENGTH(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.INVALID_BITMAP_LENGTH),
+    INVALID_CARDINALITY(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.INVALID_CARDINALITY),
+    NEGATIVE_RUN_COUNT(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.NEGATIVE_RUN_COUNT),
+    NULL_VALUES_LENGTH(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.NULL_VALUES_LENGTH),
+    RUN_OVERLAP(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.RUN_OVERLAP),
     BAD_RANGE(ValidationCode.OK), // TODO ValidationCode.BAD_RANGE
-    RUN_OVERFLOW(ValidationCode.RUN_OVERFLOW),
+    RUN_OVERFLOW(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.RUN_OVERFLOW),
     NULL_CONTAINER_VALUES(ValidationCode.NULL_CONTAINER_VALUES),
-    RUNS_NOT_MERGED(ValidationCode.RUNS_NOT_MERGED),
-    TOO_BIG_CARDINALITY(ValidationCode.TOO_BIG_CARDINALITY)
+    RUNS_NOT_MERGED(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.RUNS_NOT_MERGED),
+    TOO_BIG_CARDINALITY(ValidationCode.INVALID_CONTAINER, Container.ValidationCode.TOO_BIG_CARDINALITY)
 
     // TODO missing - some violations should be multiple - thrown not by one container type only
     ;
@@ -233,10 +232,22 @@ public class TestRoaringBitmapValidation {
       return code;
     }
 
+    public Container.ValidationCode getSubCode() {
+      return subCode;
+    }
+
     ValidationTestCase(ValidationCode code) {
       this.code = code;
+      this.subCode = Container.ValidationCode.BITMAP_VIOLATION;
+    }
+
+    ValidationTestCase(ValidationCode code, Container.ValidationCode subCode) {
+      this.code = code;
+      this.subCode = subCode;
     }
 
     private final ValidationCode code;
+
+    private final Container.ValidationCode subCode;
   }
 }

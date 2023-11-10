@@ -4,8 +4,6 @@
 
 package org.roaringbitmap;
 
-import org.roaringbitmap.RoaringBitmap.ValidationCode;
-import org.roaringbitmap.RoaringBitmap.ValidationResult;
 import org.roaringbitmap.buffer.MappeableContainer;
 
 import java.io.DataInput;
@@ -1058,6 +1056,66 @@ public abstract class Container implements Iterable<Character>, Cloneable, Exter
       return rc.validate();
     } else {
       return ValidationResult.invalid(ValidationCode.UNKNOWN_CONTAINER_TYPE, this.getClass());
+    }
+  }
+
+  public enum ValidationCode {
+    // TODO better naming & message
+    OK("valid"),
+    NEGATIVE_CARDINALITY("negative cardinality",
+        "cardinality"),
+    TOO_BIG_CARDINALITY("cardinality exceeds DEFAULT_MAX_SIZE",
+        "cardinality"),
+    NULL_CONTENT("content is null"),
+    CARDINALITY_EXCEEDS_CAPACITY("cardinality exceeds capacity",
+        "capacity", "cardinality"),
+    NON_INCREASING_VALUES("array elements not strictly increasing",
+        "number of run", "preceding value", "following value"),
+    NULL_BITMAP("bitmap is null"),
+    INVALID_BITMAP_LENGTH("invalid bitmap length",
+        "bitmap length"),
+    INVALID_CARDINALITY("given cardinality differs from its real counterpart",
+        "cardinality", "realCardinality"),
+    UNKNOWN_CONTAINER_TYPE("unknown container type",
+        "container class"),
+    NEGATIVE_RUN_COUNT("negative run count",
+        "run count"),
+    NULL_VALUES_LENGTH("valuesLength is null"),
+    CAPACITY_LESS_THAN_RUN_COUNT("capacity less than run count",
+        "capacity", "run count"),
+    RUN_OVERFLOW("run start + length overflow",
+        "number of run", "range start", "range end"),
+    BAD_RANGE("run start after its end",
+        "number of run", "range start", "range end"),
+    RUN_OVERLAP("overlapping runs",
+        "number of run", "previous run range end", "current run range start"),
+    RUNS_NOT_MERGED("start equal to last end, should have combined for run",
+        "number of run", "last value in first run"),
+    NULL_CONTAINER_VALUES("container array is null"),
+
+    BITMAP_VIOLATION("bitmap validity violation")
+
+    ;
+
+    private final String[] params;
+
+    public String getParam() {
+      return message;
+    }
+
+    public String getMessage() {
+      return message;
+    }
+
+    private final String message;
+
+    ValidationCode(String message, String... params) {
+      this.message = message;
+      this.params = params;
+    }
+
+    public int getParamsCount() {
+      return params.length;
     }
   }
 }

@@ -3,8 +3,6 @@
  */
 package org.roaringbitmap;
 
-import org.roaringbitmap.RoaringBitmap.ValidationCode;
-import org.roaringbitmap.RoaringBitmap.ValidationResult;
 import org.roaringbitmap.buffer.MappeableContainer;
 import org.roaringbitmap.buffer.MappeableRunContainer;
 

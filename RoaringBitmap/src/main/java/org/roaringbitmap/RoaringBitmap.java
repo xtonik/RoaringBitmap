@@ -3247,44 +3247,16 @@ public class RoaringBitmap implements Cloneable, Serializable, Iterable<Integer>
         "number of container", "preceding key", "following key"),
     NULL_CONTAINER("container is null",
         "number of container"),
-    NEGATIVE_CARDINALITY("negative cardinality",
-        "cardinality"),
-    TOO_BIG_CARDINALITY("cardinality exceeds DEFAULT_MAX_SIZE",
-      "cardinality"),
-    NULL_CONTENT("content is null"),
-    CARDINALITY_EXCEEDS_CAPACITY("cardinality exceeds capacity",
-      "capacity", "cardinality"),
-    NON_INCREASING_VALUES("array elements not strictly increasing",
-        "number of run", "preceding value", "following value"),
-    NULL_BITMAP("bitmap is null"),
-    INVALID_BITMAP_LENGTH("invalid bitmap length",
-        "bitmap length"),
-    INVALID_CARDINALITY("given cardinality differs from its real counterpart",
-        "cardinality", "realCardinality"),
-    UNKNOWN_CONTAINER_TYPE("unknown container type",
-    "container class"),
-    NEGATIVE_RUN_COUNT("negative run count",
-        "run count"),
-    NULL_VALUES_LENGTH("valuesLength is null"),
-    CAPACITY_LESS_THAN_RUN_COUNT("capacity less than run count",
-        "capacity", "run count"),
-    RUN_OVERFLOW("run start + length overflow",
-      "number of run", "range start", "range end"),
-    BAD_RANGE("run start after its end",
-        "number of run", "range start", "range end"),
-    RUN_OVERLAP("overlapping runs",
-        "number of run", "previous run range end", "current run range start"),
-    RUNS_NOT_MERGED("start equal to last end, should have combined for run",
-        "number of run", "last value in first run"),
-    NULL_CONTAINER_VALUES("container array is null")
+    NULL_CONTAINER_VALUES("container array is null"),
 
-    ;
+    INVALID_CONTAINER("container is not valid",
+        "number of container", "violation");
 
     private final String[] params;
 
-    public String getParam() {
-      return message;
-    }
+    public String getParam(int i) { return params[i]; }
+
+    public int getParamCount() { return params.length; }
 
     public String getMessage() {
       return message;
@@ -3293,72 +3265,12 @@ public class RoaringBitmap implements Cloneable, Serializable, Iterable<Integer>
     private final String message;
 
     ValidationCode(String message, String... params) {
-
       this.message = message;
       this.params = params;
     }
 
     public int getParamsCount() {
       return params.length;
-    }
-  }
-  public static class ValidationResult {
-
-    private final ValidationCode code;
-    private final Object[] params;
-
-    private ValidationResult(ValidationCode code, Object... params) {
-      this.code = code;
-      this.params = params;
-    }
-
-    public static ValidationResult ok() {
-      return new ValidationResult(ValidationCode.OK);
-    }
-
-    /** Creates invalid validation results.
-     *
-     * @param code reason code
-     * @return violated validation
-     */
-    public static ValidationResult invalid(ValidationCode code) {
-      return new ValidationResult(code);
-    }
-
-    /** Creates invalid validation results.
-     *
-     * @param code reason code
-     * @param params violation details parameters, their count expected to correspond to code,
-     *               otherwise IllegalArgumentException is thrown
-     * @return violated validation
-     */
-    public static ValidationResult invalid(ValidationCode code, Object... params) {
-      if (params.length != code.getParamsCount()) {
-        throw new IllegalArgumentException("expected " + code.getParamsCount() + ", but given "
-            + params.length);
-      }
-      return new ValidationResult(code, params);
-    }
-
-    public boolean isValid() {
-      return code == ValidationCode.OK;
-    }
-
-    @Override
-    public String toString() {
-      StringBuilder sb = new StringBuilder();
-      sb.append("ValidationResult{")
-          .append("code=").append(code)
-          .append(", ");
-      for (int i = 0; i < params.length; i++) {
-        sb.append(params[i]).append('=').append(params[i]).append(", ");
-      }
-      sb.append('}');
-      return sb.toString();
-    }
-
-    public ValidationCode getCode() {
-      return code;
     }
   }
 
