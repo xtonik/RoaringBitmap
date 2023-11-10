@@ -1228,7 +1228,7 @@ public final class BitmapContainer extends Container implements Cloneable {
   @Override
   public Container repairAfterLazy() {
     if (getCardinality() < 0) {
-      computeCardinality();
+      recomputeCardinality();
       if(getCardinality() <= ArrayContainer.DEFAULT_MAX_SIZE) {
         return this.toArrayContainer();
       } else if (isFull()) {
