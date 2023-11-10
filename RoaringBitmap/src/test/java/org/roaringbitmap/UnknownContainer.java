@@ -6,6 +6,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
+@SuppressWarnings({"DataFlowIssue", "SpellCheckingInspection"})
 public class UnknownContainer extends Container {
 
   @Override
@@ -359,7 +360,7 @@ public class UnknownContainer extends Container {
   }
 
   @Override
-  public void writeArray(DataOutput out) throws IOException {
+  public void writeArray(DataOutput out)  {
 
   }
 
