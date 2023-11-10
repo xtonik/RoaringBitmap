@@ -14,7 +14,8 @@ public class ValidationResult {
     this.params = params;
   }
 
-  private ValidationResult(RoaringBitmap.ValidationCode code, Container.ValidationCode subCode, Object... params) {
+  private ValidationResult(RoaringBitmap.ValidationCode code, Container.ValidationCode subCode,
+                           Object... params) {
     this.code = code;
     this.subCode = subCode;
     this.params = params;

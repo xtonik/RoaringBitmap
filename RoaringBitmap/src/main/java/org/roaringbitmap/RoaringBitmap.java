@@ -3257,9 +3257,13 @@ public class RoaringBitmap implements Cloneable, Serializable, Iterable<Integer>
 
     private final String[] params;
 
-    public String getParam(int i) { return params[i]; }
+    public String getParam(int i) {
+      return params[i];
+    }
 
-    public int getParamCount() { return params.length; }
+    public int getParamCount() {
+      return params.length;
+    }
 
     public String getMessage() {
       return message;
