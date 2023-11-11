@@ -2,10 +2,17 @@ package org.roaringbitmap;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -137,6 +144,87 @@ public class TestBitSetUtil {
     assertEqualBitsets(bitset, bitmap);
   }
 
+  @ParameterizedTest
+  @MethodSource("bitmapOfOffset")
+  public void bitmapOfOffset(String name, BitSet bitset, long[] words, int offset) {
+    RoaringBitmap bitmap = BitSetUtil.bitmapOf(words, offset);
+    assertEqualBitsets(bitset, bitmap);
+  }
+
+  public static Stream<Arguments> bitmapOfOffset() {
+    List<Arguments> args = new ArrayList<>();
+    int[] offset = { -64, -43, 0, 43, 64};
+    for (int i = 0; i < offset.length; i++) {
+      for (BitSets bitSet : BitSets.values()) {
+        args.add(Arguments.of(bitSet.name(), bitSet.get(offset[i]), bitSet.get(0).toLongArray(), offset[i]));
+      }
+    }
+    return args.stream();
+  }
+
+  public enum BitSets {
+    ONE_LOW_VALUE {
+      @Override
+      void fillBitSet(BitSet bitSet, int offset) {
+        bitSet.set(1 + offset);
+      }
+    },
+    ONE_LOW_ONE_HIGH_VALUE {
+      @Override
+      BitSet[] get(int offset) {
+        bitSet.set(1 + offset);
+        bitSet.set(10000000 + offset);
+      }
+    },
+    ONE_HIGH_VALUE {
+      @Override
+      BitSet[] get(int offset) {
+        bitSet.set(10000000 + offset);
+      }
+    },
+    GAP {
+      @Override
+      BitSet[] get(int offset) {
+        for (int gap = 1; gap <= 4096; gap *= 2) {
+          for (int offset2 = 300; offset2 < 3000; offset2 += 10) {
+            BitSet bitset = new BitSet();
+            for (int k = 0; k < 100000; k += gap) {
+              bitset.set(k + offset2 + offset);
+            }
+          }
+        }
+      }
+    },
+    RANDOM {
+      @Override
+      BitSet[] get(int offset) {
+        final Random random = new Random(1235);
+        final int runs = 50;
+        final int maxNbits = 500000;
+        BitSet[] bitSets = new BitSet[runs];
+        for (int i = 0; i < runs; i++) {
+          bitSets[i] = randomBitset(random, offset, random.nextInt(maxNbits));
+        }
+        return bitSets;
+      }
+    },
+    RANDOM_EXTENDED {
+      @Override
+      BitSet[] get(int offset) {
+        final Random random = new Random(1245);
+        final int runs = 50;
+        final int maxNbits = 500000;
+        BitSet[] bitSets = new BitSet[runs];
+        for (int i = 0; i < runs; i++) {
+          bitSets[i] =  randomBitset(random, 100000 + offset, random.nextInt(maxNbits));
+        }
+        return bitSets;
+      }
+    }
+    ;
+
+    abstract BitSet[] get(int offset);
+  }
   /*
     The ByteBuffer->RoaringBitmap just replicate similar tests written for BitSet/long[]->RoaringBitmap
    */

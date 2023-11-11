@@ -73,19 +73,40 @@ public class BitSetUtil {
    * @return roaring bitmap
    */
   public static RoaringBitmap bitmapOf(final long[] words) {
+    return bitmapOf(words, 0);
+  }
+
+  /** Generate a RoaringBitmap out of a long[], each long using little-endian representation of its
+   * bits shifted by offset. The same as <code>RoaringBitmap.addOffset(bitmapOf(words), offset)
+   * </code>, but more performant when offset is multiple of {@link Long#SIZE}.
+   *
+   * @param words array of longs (will not be modified)
+   * @param offset shift offset in bits
+   * @return roaring bitmap
+   */
+  public static RoaringBitmap bitmapOf(final long[] words, long offset) {
     // split long[] into blocks.
     // each block becomes a single container, if any bit is set
     final RoaringBitmap ans = new RoaringBitmap();
     int containerIndex = 0;
+    char highShift = Util.highbits(offset);
     for (int from = 0; from < words.length; from += BLOCK_LENGTH) {
-      final int to = Math.min(from + BLOCK_LENGTH, words.length);
-      final int blockCardinality = cardinality(from, to, words);
-      if (blockCardinality > 0) {
-        ans.highLowContainer.insertNewKeyValueAt(containerIndex++, Util.highbits(from * Long.SIZE),
-            BitSetUtil.containerOf(from, to, blockCardinality, words));
+      int key = highShift + Util.highbits(from * Long.SIZE);
+      if (key > 1 << 16) {
+        break;
+      }
+      if (key > 0) {
+        int to = Math.min(from + BLOCK_LENGTH, words.length);
+        final int blockCardinality = cardinality(from, to, words);
+        if (blockCardinality > 0) {
+          ans.highLowContainer.insertNewKeyValueAt(containerIndex++, (char) key,
+              BitSetUtil.containerOf(from, to, blockCardinality, words));
+        }
       }
     }
-    return ans;
+
+    int lowShift = Util.lowbits(offset);
+    return lowShift == 0 ? ans : RoaringBitmap.addOffset(ans, lowShift);
   }
 
   /**
