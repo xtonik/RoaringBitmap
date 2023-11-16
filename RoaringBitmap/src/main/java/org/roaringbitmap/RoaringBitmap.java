@@ -3318,7 +3318,7 @@ public class RoaringBitmap implements Cloneable, Serializable, Iterable<Integer>
       }
       ValidationResult vr = highLowContainer.values[i].validate();
       if (!vr.isValid()) {
-        return vr;
+        return ValidationResult.prependKeyToInvalidContainer(vr, i);
       }
     }
     return ValidationResult.ok();

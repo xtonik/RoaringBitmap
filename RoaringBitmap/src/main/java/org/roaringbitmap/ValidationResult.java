@@ -21,6 +21,10 @@ public class ValidationResult {
     this.params = params;
   }
 
+  public Object[] getParams() {
+    return params;
+  }
+
   public static ValidationResult ok() {
     return new ValidationResult(RoaringBitmap.ValidationCode.OK);
   }
@@ -51,6 +55,21 @@ public class ValidationResult {
     return new ValidationResult(code, params);
   }
 
+  /** Adds key as first parameter to validation results.
+   *
+   * @param vr validation result of container
+   * @param key container key
+   * @return validation result enriched by key
+   */
+  public static ValidationResult prependKeyToInvalidContainer(ValidationResult vr, int key) {
+    if (vr.getCode() != ValidationCode.INVALID_CONTAINER) {
+      throw new IllegalArgumentException("validation must be about invalid container, not: " + vr.getCode());
+    }
+    if (vr.getParams().length != vr.getCode().getParamCount()) {
+      throw new IllegalArgumentException("validation already enriched");
+    }
+    return new ValidationResult(vr.getCode(), vr.getSubCode(), key, vr.getParams());
+  }
   /**
    * Creates invalid validation results.
    *
