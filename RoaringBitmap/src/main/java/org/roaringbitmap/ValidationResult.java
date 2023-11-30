@@ -63,7 +63,8 @@ public class ValidationResult {
    */
   public static ValidationResult prependKeyToInvalidContainer(ValidationResult vr, int key) {
     if (vr.getCode() != ValidationCode.INVALID_CONTAINER) {
-      throw new IllegalArgumentException("validation must be about invalid container, not: " + vr.getCode());
+      throw new IllegalArgumentException("validation must be about invalid container, not: "
+          + vr.getCode());
     }
     if (vr.getParams().length != vr.getCode().getParamCount()) {
       throw new IllegalArgumentException("validation already enriched");
