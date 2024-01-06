@@ -243,6 +243,6 @@ public class Node16 extends Node {
 
   @Override
   public void replaceChildren(Node[] children) {
-    System.arraycopy(children, 0, this.children, 0, count);
+    System.arraycopy(children, 0, this.children, 0, Math.min(count, children.length));
   }
 }
