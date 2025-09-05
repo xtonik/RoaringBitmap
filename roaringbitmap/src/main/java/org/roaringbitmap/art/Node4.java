@@ -42,10 +42,31 @@ public class Node4 extends BranchNode {
     return ILLEGAL_IDX;
   }
 
+  private static final SearchResult FOUND0_EQUAL = SearchResult.found(0);
+  private static final SearchResult NOT_FOUND0_LESS = SearchResult.notFound(-1, 0);
+  private static final SearchResult NOT_FOUND0_MORE = SearchResult.notFound(0, -1);
+
   @Override
   public SearchResult getNearestChildPos(byte k) {
-    byte[] firstBytes = IntegerUtil.toBDBytes(key);
-    return binarySearchWithResult(firstBytes, 0, count, k);
+    if (count == 1) {
+      int ks = key >>> 24;
+      return k == ks ? FOUND0_EQUAL : (k < ks ? NOT_FOUND0_LESS : NOT_FOUND0_MORE);
+    }
+    int uk = k & 0xFF;
+    int currentByte = -1;
+    int i;
+    for (i = 0; i < count; i++) {
+      currentByte = (key >>> (24 - (i << 3))) & 0xFF;
+      if (currentByte >= uk) {
+        break;
+      }
+    }
+    if (currentByte == uk) {
+      return SearchResult.found(i);
+    }
+    return i < count
+        ? SearchResult.notFound(i - 1, i) // TODO tabelize
+        : SearchResult.notFound(i - 1, BranchNode.ILLEGAL_IDX);
   }
 
   @Override
@@ -145,7 +166,7 @@ public class Node4 extends BranchNode {
         byte thisPrefixLength = this.prefixLength();
         byte newLength = (byte) (childPrefixLength + thisPrefixLength + 1);
         byte[] newPrefix = new byte[newLength];
-        System.arraycopy(this.prefix, 0, newPrefix, 0,thisPrefixLength);
+        System.arraycopy(this.prefix, 0, newPrefix, 0, thisPrefixLength);
         newPrefix[thisPrefixLength] = IntegerUtil.firstByte(key);
         System.arraycopy(child.prefix, 0, newPrefix, thisPrefixLength + 1, childPrefixLength);
         child.prefix = newPrefix;
