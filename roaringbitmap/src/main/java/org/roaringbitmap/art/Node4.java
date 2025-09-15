@@ -32,11 +32,22 @@ public class Node4 extends BranchNode {
 
   @Override
   public int getChildPos(byte k) {
-    for (int i = 0; i < count; i++) {
-      int shiftLeftLen = (3 - i) * 8;
-      byte v = (byte) (key >> shiftLeftLen);
-      if (v == k) {
-        return i;
+    int uk = Byte.toUnsignedInt(k);
+    if (count > 0) {
+      if ((key >>> 24 & 0xFF) == uk) {
+        return 0;
+      } else if (count > 1) {
+        if ((key >>> 16 & 0xFF) == uk) {
+          return 1;
+        } else if (count > 2) {
+          if ((key >>> 8 & 0xFF) == uk) {
+            return 2;
+          } else if (count > 3) {
+            if ((key & 0xFF) == uk) {
+              return 3;
+            }
+          }
+        }
       }
     }
     return ILLEGAL_IDX;
