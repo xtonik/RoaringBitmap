@@ -105,15 +105,10 @@ public class Node16 extends BranchNode {
 
   @Override
   public byte getChildKey(int pos) {
-    int posInLong;
     if (pos <= 7) {
-      posInLong = pos;
-      byte[] firstBytes = LongUtils.toBDBytes(firstV);
-      return firstBytes[posInLong];
+      return (byte) (firstV >>> (56 - (pos << 3)));
     } else {
-      posInLong = pos - 8;
-      byte[] secondBytes = LongUtils.toBDBytes(secondV);
-      return secondBytes[posInLong];
+      return (byte) (secondV >>> (56 + 64 - (pos << 3)));
     }
   }
 
