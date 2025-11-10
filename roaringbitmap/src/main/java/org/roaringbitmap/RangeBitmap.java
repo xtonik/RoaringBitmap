@@ -472,9 +472,10 @@ public final class RangeBitmap {
           empty = false;
         }
         if (!empty) {
-          Container toAppend = new BitmapContainer(bits, -1).repairAfterLazy().runOptimize();
+          Container toAppend = new BitmapContainer(bits, -1).runOptimize();
           if (!toAppend.isEmpty()) {
-            output.append(key, toAppend instanceof BitmapContainer ? toAppend.clone() : toAppend);
+            output.append(key,
+                toAppend instanceof BitmapContainer ? toAppend.repairAfterLazy() : toAppend);
           }
         }
         key++;
@@ -509,14 +510,11 @@ public final class RangeBitmap {
             empty = false;
           }
           if (!empty) {
-            Container toAppend =
-                new BitmapContainer(bits, -1)
-                    .iand(contextArray.values[contextPos])
-                    .repairAfterLazy()
-                    .runOptimize();
+            Container toAppend = new BitmapContainer(bits, -1)
+                .iand(contextArray.values[contextPos]).runOptimize();
             if (!toAppend.isEmpty()) {
-              output.append(
-                  (char) prefix, toAppend instanceof BitmapContainer ? toAppend.clone() : toAppend);
+              output.append((char) prefix,
+                  toAppend instanceof BitmapContainer ? toAppend.repairAfterLazy() : toAppend);
             }
           }
           contextPos++;
@@ -597,9 +595,10 @@ public final class RangeBitmap {
           empty = false;
         }
         if (!empty) {
-          Container toAppend = new BitmapContainer(bits, -1).repairAfterLazy().runOptimize();
+          Container toAppend = new BitmapContainer(bits, -1).runOptimize();
           if (!toAppend.isEmpty()) {
-            output.append(key, toAppend instanceof BitmapContainer ? toAppend.clone() : toAppend);
+            output.append(key, toAppend instanceof BitmapContainer
+                ? toAppend.repairAfterLazy() : toAppend);
           }
         }
         key++;
@@ -633,14 +632,11 @@ public final class RangeBitmap {
             empty = false;
           }
           if (!empty) {
-            Container toAppend =
-                new BitmapContainer(bits, -1)
-                    .iand(contextArray.values[contextPos])
-                    .repairAfterLazy()
-                    .runOptimize();
+            Container toAppend = new BitmapContainer(bits, -1)
+                .iand(contextArray.values[contextPos]).runOptimize();
             if (!toAppend.isEmpty()) {
-              output.append(
-                  (char) prefix, toAppend instanceof BitmapContainer ? toAppend.clone() : toAppend);
+              output.append((char) prefix,
+                  toAppend instanceof BitmapContainer ? toAppend.repairAfterLazy() : toAppend);
             }
           }
           contextPos++;
